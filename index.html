@@ -1,0 +1,216 @@
+<html>
+<head>
+    <title>Vortexia</title>
+    <script src="https://unpkg.com/react/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+    <style>
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .fade-in { animation: fadeIn 2s ease-in-out; }
+        .slide-in { animation: slideIn 1s ease-in-out; }
+        .responsive-padding { padding: 0.2rem; }
+    </style>
+</head>
+<body class="bg-black text-white font-roboto">
+    <div id="root"></div>
+    <script type="text/babel">
+        class Modal extends React.Component {
+            render() {
+                const { isOpen, onClose } = this.props;
+
+                return (
+                    isOpen && (
+                        <div className="fixed inset-0 flex items-center justify-center z-50">
+                            <div className="fixed inset-0 bg-black opacity-50" onClick={onClose}></div>
+                            <div className="bg-gray-900 p-5 rounded-lg z-10">
+                                <h2 className="text-2xl font-bold text-green-500">Sobre a Vortexia</h2>
+                                <h3 className="text-xl font-bold text-white">Objetivo</h3>
+                                <p className="text-white">
+                                    Considerando a relevância atual dos sistemas de Inteligência Artificial em diversas áreas de integração, 
+                                    o objetivo desta startup é explorar as potencialidades da IA em múltiplas frentes, como gestão informática, 
+                                    educação, finanças e acessibilidade. Buscamos desenvolver soluções inovadoras que melhorem a eficiência, 
+                                    a tomada de decisões e a personalização dos serviços oferecidos.
+                                </p>
+                                <h3 className="text-xl font-bold text-white">Projetos</h3>
+                                <p className="text-white">
+                                    Nosso primeiro projeto, VortexOS, é um sistema operativo baseado em Linux que visa proporcionar uma 
+                                    experiência de uso eficiente e amigável. Com recursos que incorporam Inteligência Artificial, o VortexOS 
+                                    oferece funcionalidades personalizadas que se adaptam às necessidades dos usuários, tornando a interação 
+                                    mais intuitiva. Além disso, o sistema promove a acessibilidade e a inclusão, garantindo que todos possam 
+                                    beneficiar das tecnologias disponíveis. Acreditamos que o VortexOS não apenas facilitará as tarefas diárias, 
+                                    mas também contribuirá para a capacitação digital de diversos grupos sociais, impulsionando a inovação e a 
+                                    transformação digital na sociedade.
+                                </p>
+                                <button className="mt-4 bg-green-500 text-white py-2 px-4 rounded" onClick={onClose}>Fechar</button>
+                            </div>
+                        </div>
+                    )
+                );
+            }
+        }
+
+        class TerminalComponent extends React.Component {
+            constructor(props) {
+                super(props);
+                this.terminalRef = React.createRef();
+                this.state = { command: '' };
+            }
+
+            componentDidMount() {
+                const terminal = new Terminal({
+                    theme: {
+                        background: '#000000',
+                        foreground: '#00ff00'
+                    },
+                    rows: 20,
+                    cols: 61
+                });
+                terminal.open(this.terminalRef.current);
+                terminal.write('Welcome to VortexOS!\r\n');
+                terminal.write('Use the "help" command for more information...\r\n');
+                this.prompt(terminal);
+
+                terminal.onKey(e => {
+                    const char = e.key;
+                    if (char === '\r') {
+                        this.handleCommand(terminal);
+                    } else if (char === '\u007F') {
+                        if (this.state.command.length > 0) {
+                            this.setState(prevState => ({
+                                command: prevState.command.slice(0, -1)
+                            }));
+                            terminal.write('\b \b');
+                        }
+                    } else {
+                        this.setState(prevState => ({
+                            command: prevState.command + char
+                        }));
+                        terminal.write(char);
+                    }
+                });
+            }
+
+            formatText(text, terminal) {
+                const { cols } = terminal; // Obtém o número máximo de colunas do terminal
+                const words = text.split(' ');
+                let line = '';
+                let formattedText = '';
+
+                words.forEach(word => {
+                    if ((line + word).length >= cols) {
+                        formattedText += line.trimEnd() + '\r\n';
+                        line = ''; // Reseta a linha atual
+                    }
+                    line += word + ' '; // Adiciona a palavra à linha com espaço
+                });
+
+                formattedText += line.trimEnd(); // Adiciona qualquer linha restante
+                return formattedText;
+            }
+
+            prompt(terminal) {
+                terminal.write('\r\n$ ');
+            }
+
+            handleCommand(terminal) {
+                const { command } = this.state;
+
+                switch (command.trim()) {
+                    case 'help':
+                        terminal.write(this.formatText('\r\nComandos Disponíveis:\r\ntux, tux-dev, vinit, zoe, github, about\r\n', terminal));
+                        break;
+                    case 'tux':
+                        terminal.write(this.formatText('\r\nTux é um gestor de pacotes opensource, com a finalidade de tornar prática a instalação de programas no sistema operativo.\r\nÉ destinado à instalação de pacotes binários, sendo uma opção mais estável e de instalação mais rápida.\r\n', terminal));
+                        break;
+                    case 'tux-dev':
+                        terminal.write(this.formatText('\r\nTux-Dev é um gestor de pacotes dedicado à instalação e compilação de programas baseados em código-fonte, sendo a opção ideal se pretende obter programas mais atualizados e otimizados.\r\n', terminal));
+                        break;
+                    case 'vinit':
+                        terminal.write(this.formatText('\r\nVinit é o sistema de inicialização usado no sistema operativo, alternativo aos atuais sistemas de init como systemD e Upstart.\r\n', terminal));
+                        break;
+                    case 'zoe':
+                        terminal.write(this.formatText('\r\nZoe é uma interface gráfica inovadora, que simplifica o uso do sistema, permitindo uma interação mais intuitiva para o utilizador.\r\n', terminal));
+                        break;
+                    case 'github':
+                        terminal.write(this.formatText('\r\nAcesse o repositório do projeto em: https://github.com/sandroXP2022\r\n', terminal));
+                        break;
+                    case 'about':
+                        terminal.write(this.formatText('\r\nVortexOS é um sistema operativo inovador, projetado para atender às necessidades de uma nova era digital.\r\n', terminal));
+                        break;
+                    default:
+                        terminal.write('\r\nComando não reconhecido. Tente "help" para listar os comandos disponíveis.\r\n');
+                }
+
+                terminal.write('\r\n'); // Adiciona uma nova linha após o comando
+                this.setState({ command: '' }); // Limpa o comando
+                this.prompt(terminal); // Reapresenta o prompt
+            }
+
+            render() {
+                return <div ref={this.terminalRef} className="h-full" />;
+            }
+        }
+
+        function App() {
+            const [isModalOpen, setModalOpen] = React.useState(false);
+
+            const openModal = () => setModalOpen(true);
+            const closeModal = () => setModalOpen(false);
+
+            return (
+                <div className="flex flex-col items-center">
+                    {/* Header */}
+                    <header className="bg-gray-800 w-full py-4 flex justify-between items-center px-6">
+                        <h1 className="text-3xl font-bold text-green-500">Vortexia</h1>
+                        <button onClick={openModal} className="bg-green-500 text-white py-2 px-4 rounded">Sobre a Vortexia</button>
+                    </header>
+                    {/* Main Content */}
+                    <main className="flex flex-col items-center w-full p-2 space-y-2 mt-20">
+                        {/* Terminal Section */}
+                        <div className="bg-gray-900 w-full max-w-6xl p-2 md:p-4 rounded-lg flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 fade-in responsive-padding">
+                            <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                <h2 className="text-2xl font-bold text-green-500">VortexOS</h2>
+                                <p className="text-white">VortexOS é um sistema operativo opensource baseado em Linux, com o objetivo de ser eficiente, inovador e com uma interface amigável.</p>
+                            </div>
+                            <div className="w-full md:w-1/2 h-96 rounded-lg relative bg-gray-900">
+                                <div className="w-full h-full rounded-lg overflow-hidden">
+                                    <TerminalComponent />
+                                </div>
+                            </div>
+                        </div>
+                        {/* Image Sections */}
+                        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 w-full max-w-6xl fade-in responsive-padding">
+                            <div className="bg-gray-800 p-4 rounded-lg flex-1 flex items-center justify-between">
+                                <div className="text-left">
+                                    <h2 className="text-2xl font-bold text-green-500">Sobre o Desenvolvedor</h2>
+                                    <p className="text-white">Este sistema foi desenvolvido por Sandro Alves, um estudante de Gestão e Programação de Sistemas Informáticos como um projeto de Prova de Aptidão Profissional.</p>
+                                </div>
+                                <img src="https://avatars.githubusercontent.com/u/73885792?s=400&v=4" height="100px" width="100px" alt="Sandro Alves" className="ml-4 rounded-lg" />
+                            </div>
+                            <div className="bg-gray-700 p-4 rounded-lg flex-1 flex items-center justify-between">
+                                <a href="https://github.com/sandroXP2022" target="_blank" rel="noopener noreferrer">
+                                    <div className="text-left">
+                                        <h2 className="text-2xl font-bold text-green-500">Github</h2>
+                                        <p className="text-white">O nosso projeto está disponível no Github, tanto o código-fonte usado como a documentação se quiser saber mais acerca do projeto.</p>
+                                    </div>
+                                </a>
+                                <img src="https://github.githubassets.com/favicons/favicon.png" alt="Github Logo" height="100px" width="100px" className="ml-4 rounded-lg invert" />
+                           </div>
+                        </div>
+                    </main>
+                    <Modal isOpen={isModalOpen} onClose={closeModal} />
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
+
